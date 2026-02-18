@@ -1,0 +1,12 @@
+#DB
+duckdb
+
+duckdb
+pandas
+numpy
+rank-bm25
+faiss-cpu
+openai
+python-dotenv
+tqdm
+langchain

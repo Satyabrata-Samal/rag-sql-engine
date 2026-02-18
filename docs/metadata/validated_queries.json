@@ -1,0 +1,485 @@
+[
+  {
+    "id": "query_0457",
+    "sql": "select (firstname || ' ' || lastname) as name\nfrom (values ('Albert', 'Carbon'), ('Jon', 'Smith'), ('Bad', 'Imagination')) as b(firstname, lastname)",
+    "source_file": "146_values_list.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0583",
+    "sql": "SELECT COUNT(DISTINCT Composer) AS besteci_sayisi\nFROM tracks",
+    "source_file": "150_session3.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0585",
+    "sql": "SELECT ROUND(AVG(total),2) as ortalama_gelir\nFROM invoices",
+    "source_file": "150_session3.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0586",
+    "sql": "SELECT Name, Milliseconds\nFROM tracks\nWHERE Milliseconds > 393599",
+    "source_file": "150_session3.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0587",
+    "sql": "SELECT Name, Milliseconds\nFROM tracks\nWHERE Milliseconds > (SELECT AVG(Milliseconds) FROM tracks)",
+    "source_file": "150_session3.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0588",
+    "sql": "SELECT Composer, COUNT(name) AS Song_Count\nFROM tracks\nWHERE Composer IS NOT NULL\nGROUP BY Composer",
+    "source_file": "150_session3.sql",
+    "type": "select_aggregate",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0673",
+    "sql": "select playlist_id, track_id, count(*) as duplicate_count\nfrom playlist_track\ngroup by playlist_id, track_id\nhaving count(*) > 1",
+    "source_file": "17_Chinook Music Store Project - Tarannum Vaid.sql",
+    "type": "select_aggregate",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0674",
+    "sql": "select \n    sum(case when playlist_id is null then 1 else 0 end) as null_playlist_id,\n    sum(case when track_id is null then 1 else 0 end) as null_track_id\nfrom playlist_track",
+    "source_file": "17_Chinook Music Store Project - Tarannum Vaid.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0731",
+    "sql": "SELECT \n    table_schema,\n    table_name,\n    table_type,\n    \n    CASE \n        WHEN table_type = 'BASE TABLE' THEN 'Data Table'\n        WHEN table_type = 'VIEW' THEN 'View'\n        ELSE table_type\n    END AS table_category\nFROM information_schema.tables\nWHERE table_schema NOT IN ('information_schema', 'pg_catalog', 'sys')  \n    AND table_type = 'BASE TABLE'  \nORDER BY table_schema, table_name",
+    "source_file": "18_01_table_overview_and_counts.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0732",
+    "sql": "SELECT table_name\nFROM information_schema.tables\nWHERE table_schema = 'public' AND table_type = 'BASE TABLE'",
+    "source_file": "18_01_table_overview_and_counts.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0734",
+    "sql": "SELECT TABLE_NAME\nFROM INFORMATION_SCHEMA.TABLES\nWHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_CATALOG = 'Chinook'",
+    "source_file": "18_01_table_overview_and_counts.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0736",
+    "sql": "SELECT name\nFROM sqlite_master\nWHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+    "source_file": "18_01_table_overview_and_counts.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0737",
+    "sql": "SELECT\n    c.relname AS table_name,\n    c.reltuples AS approximate_row_count\nFROM\n    pg_class c\nJOIN\n    pg_namespace n ON c.relnamespace = n.oid\nWHERE\n    n.nspname = 'public' AND c.relkind = 'r' \nORDER BY\n    c.relname",
+    "source_file": "18_01_table_overview_and_counts.sql",
+    "type": "select_join",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0740",
+    "sql": "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+    "source_file": "18_01_table_overview_and_counts.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0741",
+    "sql": "SELECT 'invoices' AS table_name, COUNT(*) AS row_count FROM \"invoices\"\nUNION ALL\nSELECT 'customers', COUNT(*) FROM \"customers\"\nUNION ALL\nSELECT 'tracks', COUNT(*) FROM \"tracks\"",
+    "source_file": "18_01_table_overview_and_counts.sql",
+    "type": "select_union",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_0899",
+    "sql": "SELECT name \nFROM sqlite_master \nWHERE type='table'",
+    "source_file": "21_-- ChinookQuery.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1101",
+    "sql": "SELECT * FROM albums\nWHERE title LIKE '%greatest hits%'",
+    "source_file": "25_SQL Examples and Solutions.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1111",
+    "sql": "SELECT Name, Composer, Milliseconds\nFROM tracks\nLIMIT 100",
+    "source_file": "25_SQL Examples and Solutions.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1113",
+    "sql": "SELECT * FROM albums \nWHERE title LIKE '%greatest hits%'",
+    "source_file": "25_SQL Examples and Solutions.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1114",
+    "sql": "SELECT title FROM albums \nWHERE title LIKE 'Lost, Season _'",
+    "source_file": "25_SQL Examples and Solutions.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1118",
+    "sql": "SELECT * FROM invoices WHERE Total BETWEEN 5 AND 14",
+    "source_file": "25_SQL Examples and Solutions.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1126",
+    "sql": "SELECT Name, Milliseconds\nFROM tracks\nWHERE Composer IS NULL",
+    "source_file": "25_SQL Examples and Solutions.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1141",
+    "sql": "SELECT title, Length(title) \nFROM albums \nWHERE Length(title) > 25 \nORDER BY Length(title) DESC",
+    "source_file": "25_SQL Examples and Solutions.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1150",
+    "sql": "SELECT Name, Composer, Milliseconds\nFROM tracks\nORDER BY Milliseconds DESC\nLIMIT 15",
+    "source_file": "25_SQL Examples and Solutions.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1154",
+    "sql": "SELECT DISTINCT City, State, Country\nFROM customers\nORDER BY City",
+    "source_file": "25_SQL Examples and Solutions.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1188",
+    "sql": "SELECT COUNT(*)\nFROM customers\nWHERE country = 'Canada'",
+    "source_file": "25_SQL Examples and Solutions.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1215",
+    "sql": "WITH RECURSIVE counter(x) AS (\n  SELECT 1\n  UNION ALL\n  SELECT x + 1 FROM counter WHERE x < 10\n)\nSELECT x, Random() % 10000\nFROM counter",
+    "source_file": "25_SQL Examples and Solutions.sql",
+    "type": "select_union",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1302",
+    "sql": "SELECT sql FROM sqlite_master \nWHERE type='table' AND name='Order Details'",
+    "source_file": "25_SQL Examples and Solutions.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1396",
+    "sql": "SELECT\n  type,\n  name,\n  tbl_name,\n  sql\nFROM\n  sqlite_master\nWHERE\n  type = 'index'",
+    "source_file": "29_querys.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1775",
+    "sql": "SELECT * FROM chinook.employees\nWHERE Title = 'Sales Support Agent'",
+    "source_file": "43_Digital Media Store.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1869",
+    "sql": "SELECT name \nFROM sqlite_master \nWHERE type='table'",
+    "source_file": "48_-- ChinookQuery.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_1893",
+    "sql": "SELECT AVG(total) AS avg_invoice_total\nFROM invoices",
+    "source_file": "48_task3elevatelabs.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2104",
+    "sql": "SELECT COUNT(DISTINCT Composer) AS besteci_sayisi\n\tFROM tracks",
+    "source_file": "66_session3.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2106",
+    "sql": "SELECT ROUND(AVG(total),2) as ortalama_gelir\n\tFROM invoices",
+    "source_file": "66_session3.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2107",
+    "sql": "SELECT Name, Milliseconds\n\tFROM tracks\n\tWHERE Milliseconds > 393599",
+    "source_file": "66_session3.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2108",
+    "sql": "SELECT Name, Milliseconds\n\tFROM tracks\n\tWHERE Milliseconds > (SELECT AVG(Milliseconds) FROM tracks)",
+    "source_file": "66_session3.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2109",
+    "sql": "SELECT Composer, COUNT(name) AS Song_Count\n\tFROM tracks\n\tWHERE Composer IS NOT NULL\n\tGROUP BY Composer",
+    "source_file": "66_session3.sql",
+    "type": "select_aggregate",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2131",
+    "sql": "SELECT COUNT(DISTINCT Composer) AS besteci_sayisi\n\tFROM tracks",
+    "source_file": "68_in-class-3.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2133",
+    "sql": "SELECT ROUND(AVG(total),2) as ortalama_gelir\n\tFROM invoices",
+    "source_file": "68_in-class-3.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2134",
+    "sql": "SELECT Name, Milliseconds\n\tFROM tracks\n\tWHERE Milliseconds > 393599",
+    "source_file": "68_in-class-3.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2135",
+    "sql": "SELECT Name, Milliseconds\n\tFROM tracks\n\tWHERE Milliseconds > (SELECT AVG(Milliseconds) FROM tracks)",
+    "source_file": "68_in-class-3.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2136",
+    "sql": "SELECT Composer, COUNT(name) AS Song_Count\n\tFROM tracks\n\tWHERE Composer IS NOT NULL\n\tGROUP BY Composer",
+    "source_file": "68_in-class-3.sql",
+    "type": "select_aggregate",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2295",
+    "sql": "CREATE TEMP TABLE customers_temp AS SELECT * FROM customers",
+    "source_file": "71_02_missing_value_handling.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2296",
+    "sql": "SELECT COUNT(*) FROM customers_temp WHERE Country = 'USA' AND State IS NULL",
+    "source_file": "71_02_missing_value_handling.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2303",
+    "sql": "SELECT\n    COUNT(*) AS total_rows,\n    COUNT(Fax) AS non_null_fax_count,\n    (COUNT(*) - COUNT(Fax)) AS null_fax_count\nFROM\n    customers",
+    "source_file": "73_03_data_quality_and_nulls.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2304",
+    "sql": "SELECT\n    SUM(CASE WHEN Company IS NULL THEN 1 ELSE 0 END) AS null_company_count,\n    SUM(CASE WHEN Company IS NOT NULL THEN 1 ELSE 0 END) AS non_null_company_count\nFROM\n    customers",
+    "source_file": "73_03_data_quality_and_nulls.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2305",
+    "sql": "SELECT COUNT(*) AS null_state_count\nFROM customers\nWHERE State IS NULL",
+    "source_file": "73_03_data_quality_and_nulls.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2306",
+    "sql": "SELECT * FROM customers WHERE State IS NULL OR State = ''",
+    "source_file": "73_03_data_quality_and_nulls.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2309",
+    "sql": "SELECT\n    Name,\n    COUNT(*)\nFROM\n    playlists\nGROUP BY\n    Name\nHAVING\n    COUNT(*) > 1",
+    "source_file": "73_03_data_quality_and_nulls.sql",
+    "type": "select_aggregate",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2311",
+    "sql": "SELECT COUNT(*) FROM customers WHERE Company IS NULL",
+    "source_file": "73_03_data_quality_and_nulls.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2312",
+    "sql": "SELECT COUNT(*) FROM customers WHERE Country = 'USA' AND State IS NULL",
+    "source_file": "73_03_data_quality_and_nulls.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2314",
+    "sql": "SELECT \n    table_schema,\n    table_name,\n    table_type,\n    \n    CASE \n        WHEN table_type = 'BASE TABLE' THEN 'Data Table'\n        WHEN table_type = 'VIEW' THEN 'View'\n        ELSE table_type\n    END AS table_category\nFROM information_schema.tables\nWHERE table_schema NOT IN ('information_schema', 'pg_catalog', 'sys')  \n    AND table_type = 'BASE TABLE'  \nORDER BY table_schema, table_name",
+    "source_file": "75_01_table_overview_and_counts.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2315",
+    "sql": "SELECT table_name\nFROM information_schema.tables\nWHERE table_schema = 'public' AND table_type = 'BASE TABLE'",
+    "source_file": "75_01_table_overview_and_counts.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2317",
+    "sql": "SELECT TABLE_NAME\nFROM INFORMATION_SCHEMA.TABLES\nWHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_CATALOG = 'Chinook'",
+    "source_file": "75_01_table_overview_and_counts.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2319",
+    "sql": "SELECT name\nFROM sqlite_master\nWHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+    "source_file": "75_01_table_overview_and_counts.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2320",
+    "sql": "SELECT\n    c.relname AS table_name,\n    c.reltuples AS approximate_row_count\nFROM\n    pg_class c\nJOIN\n    pg_namespace n ON c.relnamespace = n.oid\nWHERE\n    n.nspname = 'public' AND c.relkind = 'r' \nORDER BY\n    c.relname",
+    "source_file": "75_01_table_overview_and_counts.sql",
+    "type": "select_join",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2323",
+    "sql": "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+    "source_file": "75_01_table_overview_and_counts.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2324",
+    "sql": "SELECT 'invoices' AS table_name, COUNT(*) AS row_count FROM \"invoices\"\nUNION ALL\nSELECT 'customers', COUNT(*) FROM \"customers\"\nUNION ALL\nSELECT 'tracks', COUNT(*) FROM \"tracks\"",
+    "source_file": "75_01_table_overview_and_counts.sql",
+    "type": "select_union",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2422",
+    "sql": "SELECT\n    Name,\n    COUNT(*) AS occurrence_count\nFROM\n    playlists\nGROUP BY\n    Name\nHAVING\n    COUNT(*) > 1",
+    "source_file": "83_01_duplicate_detection_and_removal.sql",
+    "type": "select_aggregate",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2423",
+    "sql": "CREATE TEMP TABLE customer_contacts AS\nSELECT 'John Doe' AS name, 'johndoe@email.com' AS email, 1 AS version\nUNION ALL\nSELECT 'Jane Smith', 'janesmith@email.com', 1\nUNION ALL\nSELECT 'John Doe', 'johndoe@email.com', 2 \nUNION ALL\nSELECT 'Peter Jones', 'peterjones@email.com', 1\nUNION ALL\nSELECT 'John Doe', 'johndoe@email.com', 3",
+    "source_file": "83_01_duplicate_detection_and_removal.sql",
+    "type": "select_union",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2424",
+    "sql": "WITH NumberedContacts AS (\n    SELECT\n        name,\n        email,\n        version,\n        ROW_NUMBER() OVER(PARTITION BY email ORDER BY version DESC) as rn\n    FROM\n        customer_contacts\n)\nSELECT * FROM NumberedContacts",
+    "source_file": "83_01_duplicate_detection_and_removal.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2425",
+    "sql": "WITH NumberedContacts AS (\n    SELECT\n        rowid, \n               \n        ROW_NUMBER() OVER(PARTITION BY email ORDER BY version DESC) as rn\n    FROM\n        customer_contacts\n)\nDELETE FROM customer_contacts\nWHERE rowid IN (SELECT rowid FROM NumberedContacts WHERE rn > 1)",
+    "source_file": "83_01_duplicate_detection_and_removal.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2435",
+    "sql": "SELECT\n    *\nFROM\n    customers\nWHERE\n    LOWER(Country) = 'usa'",
+    "source_file": "86_02_string_cleaning_and_standardization.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2436",
+    "sql": "SELECT\n    Name,\n    REPLACE(Name, 'Sci Fi', 'Science Fiction') AS StandardizedName\nFROM\n    genres\nWHERE\n    Name = 'Sci Fi & Fantasy'",
+    "source_file": "86_02_string_cleaning_and_standardization.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2437",
+    "sql": "SELECT\n    Phone,\n    REPLACE(Phone, '-', '') AS StandardizedPhone\nFROM\n    customers\nWHERE\n    Country = 'USA'\n    AND Phone IS NOT NULL\nLIMIT 5",
+    "source_file": "86_02_string_cleaning_and_standardization.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2524",
+    "sql": "SELECT * \nFROM employees\nWHERE title LIKE '%Sales%Agent%'",
+    "source_file": "92_Digital Media Sales (Window Function, 4 Table Join).sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2535",
+    "sql": "SELECT *\nFROM chinook.customers\nWHERE country = 'Brazil'",
+    "source_file": "92_Digital Media Sales (Window Function, 4 Table Join).sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2569",
+    "sql": "SELECT AVG(total) AS avg_invoice_total\nFROM invoices",
+    "source_file": "9_task3elevatelabs.sql",
+    "type": "select_basic",
+    "file_type": "sql"
+  },
+  {
+    "id": "query_2577",
+    "sql": "SELECT\n  Name AS artist_name\nFROM artists\nGROUP BY 1",
+    "source_file": "BA.sql",
+    "type": "select_aggregate",
+    "file_type": "sql"
+  }
+]

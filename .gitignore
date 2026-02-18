@@ -1,0 +1,31 @@
+
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.venv/
+env/
+.pytest_cache/
+
+# Mac
+.DS_Store
+
+# Environment variables
+.env
+
+# Data
+data/vectorstores/
+data/chunks/
+
+tests/
+notebooks/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
