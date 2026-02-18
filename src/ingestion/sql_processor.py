@@ -12,16 +12,23 @@ class SQLProcessor:
     """
 
     def __init__(self, metadata_folder: str = "metadata"):
-        self.base_path = Path(settings.JSON_PATH) 
+        self.base_path = Path(settings.DOCS_PATH) 
     def process_file(self, filename: str) -> List[Dict]:
-        file_path = self.base_path / filename
+        input_path = Path(filename)
+
+        # If caller passed a path that already includes directories (or an absolute path),
+        # use it as-is. Otherwise, resolve relative to DOCS_PATH.
+        if input_path.is_absolute() or len(input_path.parts) > 1:
+            file_path = input_path
+        else:
+            file_path = self.base_path / input_path
+
         data = load_json_file(file_path)
 
         if not isinstance(data, list):
             raise ValueError("SQL JSON must be a list of examples.")
 
-        return self._format_chunks(data, filename)
-
+        return self._format_chunks(data, str(file_path))
 
     def _extract_tables(self, sql: str) -> List[str]:
         """

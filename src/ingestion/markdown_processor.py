@@ -31,16 +31,25 @@ class MarkdownProcessor:
             return_each_line=self.return_each_line,
         )
 
-    def process_file(self, file_path: Path)-> List[Dict]:
+    def process_file(self, file_path: Path) -> List[Dict]:
         """
-        Load and split markdown file from docs directory.
+        Load and split a markdown file.
+
+        - If `file_path` is already a path (absolute or includes directories), use it as-is.
+        - If it's a bare filename, resolve it relative to settings.DOCS_PATH.
         """
-        file_path = Path(settings.MD_PATH) / filename
-        markdown_text = load_markdown_file(file_path)
+        input_path = Path(file_path)
+
+        if input_path.is_absolute() or len(input_path.parts) > 1:
+            resolved_path = input_path
+        else:
+            resolved_path = Path(settings.DOCS_PATH) / input_path
+
+        markdown_text = load_markdown_file(resolved_path)
 
         splits = self.splitter.split_text(markdown_text)
 
-        return self._format_splits(splits, filename)
+        return self._format_splits(splits, str(resolved_path))
 
     def _format_splits(self, splits, source_file: str) -> List[Dict]:
         """

@@ -10,8 +10,7 @@ class Settings(BaseSettings):
     TIMEOUT: int = 30
     DUCKDB_PATH: str = "sql_db/chinook.duckdb"
     VECTOR_STORE_PATH: str = "vectorstore/vector_store.db"
-    MD_PATH: str = "docs/doc_files"
-    JSON_PATH: str = "docs/metadata"
+    DOCS_PATH: str = "docs"
 
     class Config:
         env_file = ".env" if Path(".env").exists() else None

@@ -10,3 +10,5 @@ openai
 python-dotenv
 tqdm
 langchain
+langchain-openai
+langchain-community
