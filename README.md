@@ -2,36 +2,52 @@
 
 Production-oriented RAG-based SQL generation engine.
 
-The system takes a natural language analytics question and returns SQL grounded in:
-- schema/business context
+This project takes a natural language analytics question and returns SQL grounded in:
+- business/schema context
 - validated SQL examples
 - hybrid retrieval (Vector + BM25)
 
-## Architecture
+## End-to-End Flow
 
-Pipeline:
-1. Query understanding (rule-based intent + dynamic retrieval weights)
+1. Query understanding (rule-based intent + dynamic weights)
 2. Hybrid retrieval per store (vector + BM25 + fusion)
-3. Reranking (cross-encoder by default; LLM optional)
-4. Structured context builder (section caps + global cap)
-5. SQL generation
-6. SQL validation against DuckDB
+3. Reranking (cross-encoder default, LLM optional)
+4. Structured context assembly (section caps + global cap)
+5. SQL generation (LLM)
+6. SQL validation (DuckDB)
 
-Primary service API:
+Primary API:
 - `RAGSQLEngine.answer(question: str) -> SQLGenerationResult`
 
-CLI entrypoint:
-- `main.py`
+Entrypoints:
+- CLI: `main.py`
+- Web UI: `ui.py`
+
+## Project Layout
+
+- `src/rag/` - engine orchestration, SQL generation, SQL validation, output types
+- `src/retrieval/` - query understanding, vector/BM25 hybrid retrieval, reranking, context builder
+- `src/ingestion/` - markdown/sql chunking, FAISS build, BM25 artifact build/load
+- `src/llm/` - LLM and embedding client abstraction
+- `src/utils/` - loaders, logging, helpers
+- `tests/` - focused unit/integration tests
+- `data/` - chunks, vector indexes, DuckDB files, BM25 payloads
+- `diagram.md` - mermaid machine diagram for flow
 
 ## Requirements
 
 - Python 3.10+
 - OpenAI API key
-- Prebuilt artifacts in `data/`:
-  - `data/vectorstores/sql_index`
-  - `data/vectorstores/business_index`
-  - `data/bm25/sql_bm25.pkl`
-  - `data/bm25/business_bm25.pkl`
+- Dependencies from `requirements.txt`
+
+Optional but recommended artifacts in `data/`:
+- `data/vectorstores/sql_index`
+- `data/vectorstores/business_index`
+- `data/bm25/sql_bm25.pkl`
+- `data/bm25/business_bm25.pkl`
+
+Note:
+- If BM25 `.pkl` files are missing, runtime falls back to `data/chunks/*.json` and builds BM25 in-memory.
 
 ## Setup
 
@@ -47,7 +63,11 @@ Create `.env`:
 OPENAI_API_KEY=your_key_here
 ```
 
-Optional settings are in `config.py` (retrieval sizes, caps, paths, reranker model).
+Tune runtime in `config.py`:
+- retrieval top-k / rerank top-k
+- context caps
+- artifact paths
+- reranker mode/model
 
 ## Build Artifacts (Ingestion)
 
@@ -55,24 +75,24 @@ Optional settings are in `config.py` (retrieval sizes, caps, paths, reranker mod
 python -m src.ingestion.pipeline
 ```
 
-This generates/updates:
+Generates/updates:
 - `data/chunks/*.json`
 - `data/vectorstores/*`
 - `data/bm25/*.pkl`
 
-## Run CLI
+## Run
+
+### CLI
 
 ```bash
 python main.py "Show total invoice revenue by country"
 ```
 
-Expected behavior:
+Behavior:
 - prints SQL on success
-- prints validation failure details on invalid SQL
+- prints candidate SQL + validation error on failure
 
-## Simple Web UI
-
-Run a minimal local UI to test questions quickly:
+### Simple Web UI
 
 ```bash
 python ui.py --host 127.0.0.1 --port 8080
@@ -81,13 +101,9 @@ python ui.py --host 127.0.0.1 --port 8080
 Open:
 - `http://127.0.0.1:8080`
 
-The page lets you submit a question and see:
-- generated SQL (if valid)
-- candidate SQL + validation error (if invalid)
+## Test
 
-## Tests
-
-Standard focused run:
+Focused suite:
 
 ```bash
 python -m pytest -q -p no:debugging \
@@ -100,7 +116,7 @@ python -m pytest -q -p no:debugging \
   tests/test_llm_manual.py
 ```
 
-Quick smoke command:
+One-command smoke run:
 
 ```bash
 ./scripts/smoke_test.sh
@@ -108,12 +124,30 @@ Quick smoke command:
 
 ## Troubleshooting
 
-- If `pytest` crashes at startup in your local environment, keep `-p no:debugging`.
-- If runtime fails with missing artifact errors, run ingestion first.
-- If DuckDB validation fails to initialize, confirm `duckdb` is installed and `DUCKDB_PATH` is correct.
+- If `pytest` crashes at startup, keep `-p no:debugging`.
+- If vector indexes are missing, run ingestion first.
+- If DuckDB validation fails, verify `duckdb` installation and `DUCKDB_PATH` in `config.py`.
+- If Mermaid preview shows plain text, see **Diagram Preview** below.
 
-## Repo Notes
+## Diagram Preview (Mermaid)
 
-- Detailed implementation context: `CONTEXT.md`
-- Runtime config: `config.py`
-- Engine orchestrator: `src/rag/engine.py`
+Files:
+- `diagram.md` (preview/render)
+- `diagram.txt` (plain text)
+
+In VS Code:
+1. Open `diagram.md`
+2. Press `Shift + Command + V`
+3. Or side-by-side: `Command + K`, then `V`
+
+If Mermaid renders as text:
+1. Confirm fence is ` ```mermaid ... ``` `
+2. Enable setting: `Markdown > Preview: Mermaid`
+3. Install `Markdown Preview Mermaid Support` (`bierner.markdown-mermaid`)
+4. Reload window (`Developer: Reload Window`)
+
+## Related Docs
+
+- `CONTEXT.md` - full implementation context and decisions
+- `config.py` - runtime settings
+- `src/rag/engine.py` - service orchestrator
