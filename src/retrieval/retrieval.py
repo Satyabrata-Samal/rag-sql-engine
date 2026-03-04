@@ -1,13 +1,6 @@
-import 
+"""Backward-compatible module exposing retrieval pipeline and retrievers."""
 
-class HybridRetriever:
-    def __init__(self, business_index_path, sql_index_path):
-        self.business_store = self._load_index(business_index_path)
-        self.sql_store = self._load_index(sql_index_path)
+from src.retrieval.hybrid_retriever import HybridRetriever
+from src.retrieval.retrieval_pipeline import RetrievalPipeline
 
-    def retrieve(self, query: str, top_k: int = 5):
-        # 1. embed query
-        # 2. search both indexes
-        # 3. merge results
-        # 4. return structured docs
-        return results
+__all__ = ["HybridRetriever", "RetrievalPipeline"]

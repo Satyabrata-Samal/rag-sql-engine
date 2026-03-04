@@ -1,7 +1,5 @@
-# from src.ingestion.markdown_processor import MarkdownProcessor
+"""Legacy module retained for compatibility."""
 
-# def process_business_rules():
-#     processor = MarkdownProcessor(return_each_line=False)
-#     chunks = processor.process_file("business_rules.md")
+from src.rag.engine import RAGSQLEngine
 
-#     return chunks
+__all__ = ["RAGSQLEngine"]

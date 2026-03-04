@@ -1,16 +1,22 @@
-from typing import List, Dict
+from __future__ import annotations
+
+from typing import Any
+
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+
+from config import settings
 from src.llm.base import BaseLLM
-from src.core.config import settings
 
 
 class LangChainLLM(BaseLLM):
+    """LangChain wrapper around OpenAI chat and embedding models."""
 
     def __init__(self):
         self.chat_model = ChatOpenAI(
             model=settings.CHAT_MODEL,
             temperature=settings.TEMPERATURE,
             api_key=settings.OPENAI_API_KEY,
+            timeout=settings.TIMEOUT,
         )
 
         self.embedding_model = OpenAIEmbeddings(
@@ -18,16 +24,12 @@ class LangChainLLM(BaseLLM):
             api_key=settings.OPENAI_API_KEY,
         )
 
-    # -----------------------
-    # Chat generation
-    # -----------------------
-    def generate(self, messages: List[Dict[str, str]]) -> str:
+    def generate(self, messages: list[dict[str, str]]) -> str:
+        if not isinstance(messages, list):
+            raise TypeError("messages must be a list of role/content dictionaries")
         response = self.chat_model.invoke(messages)
-        return response.content
+        content: Any = getattr(response, "content", "")
+        return str(content)
 
-    # -----------------------
-    # Embeddings
-    # -----------------------
-    def embed(self, text: str) -> List[float]:
+    def embed(self, text: str) -> list[float]:
         return self.embedding_model.embed_query(text)
-

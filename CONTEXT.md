@@ -1,152 +1,209 @@
-# Project Descriptor (.d) — rag-sql-engine
+# Project Context - RAG SQL Engine (Production Refactor Baseline)
 
-## 1) What this repo is
-An MVP **RAG + SQL** engine that:
-- **Ingests** reference documents (business rules, DB schema, validated SQL/metadata)
-- Builds **chunks** and **vector indexes** (FAISS) per knowledge domain
-- Uses **retrieval + routing** to select the right knowledge sources
-- Uses an **LLM (OpenAI via LangChain)** to generate SQL and/or analysis grounded in retrieved context
-- Optionally uses **DuckDB** for query execution / analytical workflows
+## 1) Goal
+Build a production-grade RAG SQL engine where a user asks a natural-language analytics question and the system returns executable SQL grounded in:
+- schema/business knowledge
+- validated SQL examples
+- hybrid retrieval (vector + BM25)
 
-This repo is structured for a “docs → processed artifacts → retrieval → prompting → generation” loop.
+This repo now has deterministic query understanding, typed retrieval contracts, dynamic fusion, reranking, structured context construction, SQL generation, and SQL validation.
 
----
+## 2) Current Scope
+Primary implementation lives in:
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src`
+- `/Volumes/SBS1/hello_world/projects/rag_sql/main.py`
+- `/Volumes/SBS1/hello_world/projects/rag_sql/config.py`
+- `/Volumes/SBS1/hello_world/projects/rag_sql/tests`
 
-## 2) Tech stack (from requirements)
-- **duckdb**: embedded analytics DB (note: appears duplicated in `requirements.txt`)
-- **pandas / numpy**: data handling
-- **faiss-cpu**: vector search / ANN index
-- **rank-bm25**: lexical retrieval (hybrid retrieval likely)
-- **openai**: embeddings + chat/completions
-- **langchain**: orchestration + LLM wrapper client
-- **python-dotenv**: environment-based configuration (`.env`)
-- **tqdm**: progress bars
+`docs/` remains source corpus for ingestion jobs, but runtime architecture is centered on generated artifacts in `data/`.
 
----
+## 3) Core Contracts (Authoritative)
 
-## 3) Key folders & artifacts
-### 3.1 Raw inputs (authoritative sources)
-- `docs/`
-  - Business rules / schema / metrics markdowns (planned inputs; matches README intent)
-  - `docs/metadata/` (validated SQL json corpus is also present here in the repo)
-- `data/raw/` (current ingestion code reads from here)
-  - Markdown inputs: `data/raw/**/*.md`
-  - SQL metadata input: `data/raw/sql/validated_queries.json`
+### Retrieval document contract
+`RetrievedDocument` (`/Volumes/SBS1/hello_world/projects/rag_sql/src/retrieval/types.py`):
+- `doc_id: str`
+- `content: str`
+- `metadata: dict[str, Any]`
+- `source_store: Literal["sql", "business"]`
+- `vector_score: float`
+- `bm25_score: float`
+- `fusion_score: float`
+- `rerank_score: float | None`
 
-### 3.2 Processed outputs (generated)
-- `data/chunks/`
-  - `business_chunks.json` (generated)
-  - `sql_chunks.json` (generated)
-  - `schema_chunks.json` (planned; not currently produced by `src/ingestion/pipeline.py`)
-- `data/vectorstores/`
-  - `business_index/` (generated)
-  - `sql_index/` (generated)
-  - `schema_index/` (planned; not currently built by `src/ingestion/pipeline.py`)
+### Retriever contract
+Every retriever exposes:
+- `.search(query: str, top_k: int) -> list[RetrievedDocument]`
 
-### 3.3 Application code
-- `src/`
-  - `src/ingestion/pipeline.py` (current ingestion entry)
-  - `src/ingestion/vectorstore_builder.py` (FAISS index builder)
-  - `src/utils/chunk_writer.py` (writes chunk JSON)
-  - `src/llm/langchain_client.py` (LangChain-based LLM client)
+Implemented in:
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/retrieval/vector_retriever.py`
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/ingestion/bm25_index.py` (`BM25Retriever`)
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/retrieval/hybrid_retriever.py`
 
-### 3.4 Entrypoints & config
-- `main.py` (present but currently empty; intended as runtime entrypoint)
-- `config.py` (present)
-- `.env` (implied via `python-dotenv`)
----
+### Query understanding contract
+`QueryUnderstanding.analyze(query)` returns `QueryProfile` (`/Volumes/SBS1/hello_world/projects/rag_sql/src/retrieval/query_context.py`):
+- `intent_type: Literal["sql_generation", "business", "mixed"]`
+- `semantic_weight: float`
+- `lexical_weight: float`
+- `target_stores: list["sql" | "business"]`
+- `confidence: float`
 
-## 4) System architecture (as intended)
-### 4.1 Ingestion pipeline
-Goal: transform raw markdown/sql/metadata into searchable knowledge.
-Likely steps:
-1. Load raw documents from `docs/` and/or `docs/raw/...`
-2. Normalize/clean text (strip SQL headers, remove irrelevant lines, preserve code blocks)
-3. Split into chunks (size tuned for embedding + retrieval)
-4. Embed chunks (OpenAI embeddings)
-5. Build vectorstores (FAISS) per domain
-6. Persist artifacts to `data/chunks/` and `data/vectorstores/`
+### Context contract
+`ContextBuilder.build(sql_docs, business_docs, budgets)` returns `StructuredContext`:
+- `schema_context`
+- `business_rules`
+- `similar_sql_examples`
+- `final_prompt_context`
+- `token_estimate`
 
-### 4.2 Retrieval and routing
-- Separate retrievers for:
-  - Business rules
-  - DB schema
-  - SQL examples/validated SQL metadata
-- A “hybrid router” is implied (README): routes queries to the most relevant retriever(s), possibly mixing BM25 + vectors.
+Files:
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/retrieval/context_builder.py`
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/rag/types.py`
 
-### 4.3 Generation (RAG)
-- Prompts combine:
-  - User question
-  - Retrieved context snippets
-  - Formatting instructions (SQL-only vs explanation)
-- LLM interaction is via `src/llm/langchain_client.py`.
+### SQL generation contract
+`SQLGenerator.generate(question, context)` returns `SQLGenerationResult`:
+- `sql: str | None`
+- `is_valid: bool`
+- `validation_error: str | None`
+- `llm_raw_output: str`
+- `metadata: dict[str, Any]`
 
-### 4.4 Optional execution/validation
-- DuckDB can be used to:
-  - Execute generated SQL (if data is present/loaded)
-  - Validate query shape / syntax
-  - Produce result previews for analysis answers
+Files:
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/rag/sql_generator.py`
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/rag/sql_validator.py`
 
----
+## 4) Runtime Architecture (Implemented)
 
-## 5) Current repo status (based on available evidence)
-### Implemented / present
-- Dependency set for RAG + SQL
-- Document corpus structure under `docs/` including many `.sql` examples
-- README-described pipeline components exist (at least by file names):
-  - `src/ingestion/pipeline.py`
-  - `src/llm/langchain_client.py`
-  - `main.py`, `config.py`
-- A working convention for generated outputs under `data/`
+1. Query understanding
+- Rule-based intent classification + dynamic retrieval weights.
+- File: `/Volumes/SBS1/hello_world/projects/rag_sql/src/retrieval/query_context.py`
 
-### Likely WIP / areas to confirm by code inspection
-- Exact chunking strategy and metadata schema for chunks
-- Whether retrieval is pure-vector, pure-BM25, or hybrid
-- Query routing logic: heuristics vs learned classifier
-- SQL execution harness: how DuckDB is loaded with data and how results are surfaced
-- Prompt templates: where stored and how selected (SQL generation vs analysis)
+2. Hybrid retrieval per store
+- Vector search + BM25 search -> merge -> min-max normalize -> weighted fusion.
+- File: `/Volumes/SBS1/hello_world/projects/rag_sql/src/retrieval/hybrid_retriever.py`
 
----
+3. Reranking
+- Default: cross-encoder.
+- Optional: LLM rerank.
+- File: `/Volumes/SBS1/hello_world/projects/rag_sql/src/retrieval/reranker.py`
 
-## 6) How to run (expected workflow)
-1. Create `.env` with keys (at minimum):
-   - `OPENAI_API_KEY=...`
-2. Put/update source docs in `docs/`
-3. Run ingestion (via `main.py` or ingestion pipeline module) to generate:
-   - `data/chunks/*`
-   - `data/vectorstores/*`
-4. Ask questions / generate SQL (via `main.py` interactive or a function call)
+4. Structured context
+- Sectioned output:
+  - `[SCHEMA CONTEXT]`
+  - `[BUSINESS RULES]`
+  - `[SIMILAR SQL EXAMPLES]`
+- Section caps + global cap are enforced deterministically.
+- File: `/Volumes/SBS1/hello_world/projects/rag_sql/src/retrieval/context_builder.py`
 
----
+5. SQL generation + validation
+- SQL-only prompt contract.
+- Output is validated against DuckDB.
+- No auto-retry.
+- Files:
+  - `/Volumes/SBS1/hello_world/projects/rag_sql/src/rag/sql_generator.py`
+  - `/Volumes/SBS1/hello_world/projects/rag_sql/src/rag/sql_validator.py`
 
-## 7) Conventions & assumptions
-- Domain separation is central: **business**, **schema**, **sql/metadata** are indexed separately.
-- Source `.sql` files may contain noise (download links, narrative text); ingestion should treat them as semi-structured documents.
-- Artifacts are checked/used locally (FAISS indexes stored on disk, not a hosted vector DB).
+6. Orchestration service + CLI
+- Service API: `RAGSQLEngine.answer(question)`
+- CLI wrapper: `/Volumes/SBS1/hello_world/projects/rag_sql/main.py`
+- Simple local UI: `/Volumes/SBS1/hello_world/projects/rag_sql/ui.py` (HTTP form-based test harness)
 
----
+## 5) Ingestion and Artifact Build Path
 
-## 8) Suggested “next documentation upgrades”
-(For future updates to this `.d` file)
-- Add exact command(s) used to run ingestion and query mode
-- Document chunk JSON schema (fields: `id`, `source`, `domain`, `text`, `embedding_model`, etc.)
-- Document vectorstore on-disk layout (index file names, metadata store)
-- Document prompt templates and guardrails for SQL correctness
-- Add examples:
-  - “Generate SQL for …”
-  - “Explain metric definition …”
-  - “Validate this SQL against schema …”
+Ingestion pipeline:
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/ingestion/pipeline.py`
 
----
+Builds:
+- chunks JSON (business/sql)
+- FAISS indexes (business/sql)
+- BM25 payload files (business/sql)
 
-## 9) File index (high-signal)
-- `requirements.txt`
-- `config.py`
-- `main.py` (currently empty)
-- `src/ingestion/pipeline.py`
-- `src/ingestion/vectorstore_builder.py`
-- `src/utils/chunk_writer.py`
-- `src/llm/langchain_client.py`
-- `scripts/` (utilities, e.g., validation helpers)
-- `docs/` (reference documents + SQL metadata corpus)
-- `data/` (generated chunks + vectorstores)
+BM25 persistence/load:
+- Builder: `/Volumes/SBS1/hello_world/projects/rag_sql/src/ingestion/bm25_builder.py`
+- Loader: `/Volumes/SBS1/hello_world/projects/rag_sql/src/ingestion/bm25_loader.py`
+
+## 6) Config and Environment
+
+Main settings are in `/Volumes/SBS1/hello_world/projects/rag_sql/config.py`:
+- model config (`CHAT_MODEL`, `EMBEDDING_MODEL`, `TEMPERATURE`)
+- artifact paths (`SQL_VECTOR_INDEX_PATH`, `BUSINESS_VECTOR_INDEX_PATH`, `SQL_BM25_PATH`, `BUSINESS_BM25_PATH`)
+- retrieval/rerank (`RETRIEVAL_TOP_K`, `RERANK_TOP_K`, `RERANKER_TYPE`)
+- context budgets (`SCHEMA_CONTEXT_CHAR_CAP`, `BUSINESS_CONTEXT_CHAR_CAP`, `SQL_EXAMPLES_CHAR_CAP`, `GLOBAL_CONTEXT_CHAR_CAP`)
+
+## 7) Known Risks / Residual Gaps
+
+1. Runtime dependency/environment risk
+- Local `pytest` crashes at startup in this machine's Python 3.13 environment (segfault in pytest debug stack).
+- Code compiles (`python -m compileall`) but full test execution is blocked by environment.
+
+2. Artifact availability risk
+- Runtime requires prebuilt vector and BM25 files at configured paths.
+- Missing artifact files will fail fast with explicit errors.
+
+3. Cross-encoder dependency risk
+- Default reranker requires `sentence_transformers` model availability.
+
+## 8) Tests Added/Updated
+
+Updated tests:
+- `/Volumes/SBS1/hello_world/projects/rag_sql/tests/test_sql_text_splitter.py`
+- `/Volumes/SBS1/hello_world/projects/rag_sql/tests/test_llm_manual.py`
+
+New tests:
+- `/Volumes/SBS1/hello_world/projects/rag_sql/tests/test_query_understanding.py`
+- `/Volumes/SBS1/hello_world/projects/rag_sql/tests/test_hybrid_retriever.py`
+- `/Volumes/SBS1/hello_world/projects/rag_sql/tests/test_context_builder.py`
+- `/Volumes/SBS1/hello_world/projects/rag_sql/tests/test_retriever_contracts.py`
+- `/Volumes/SBS1/hello_world/projects/rag_sql/tests/test_engine_integration.py`
+
+Additional test coverage:
+- `/Volumes/SBS1/hello_world/projects/rag_sql/tests/test_llm_manual.py` now includes empty-model-output handling.
+- `/Volumes/SBS1/hello_world/projects/rag_sql/tests/test_query_understanding.py` now includes low-signal confidence behavior.
+
+## 9) Run Commands
+
+Ingestion build:
+```bash
+python -m src.ingestion.pipeline
+```
+
+CLI usage:
+```bash
+python main.py "Show total invoice revenue by country"
+```
+
+Simple UI:
+```bash
+python ui.py --host 127.0.0.1 --port 8080
+```
+
+Compile-only validation:
+```bash
+python -m compileall -q src tests main.py
+```
+
+Stable pytest run command in this environment:
+```bash
+python -m pytest -q -p no:debugging tests/test_query_understanding.py tests/test_hybrid_retriever.py tests/test_context_builder.py tests/test_retriever_contracts.py tests/test_engine_integration.py tests/test_sql_text_splitter.py tests/test_llm_manual.py
+```
+
+Latest result:
+- `13 passed` (with one Pydantic deprecation warning from external dependency internals).
+
+Release hygiene additions:
+- `/Volumes/SBS1/hello_world/projects/rag_sql/README.md` now includes setup, ingestion, run, test, troubleshooting.
+- `/Volumes/SBS1/hello_world/projects/rag_sql/scripts/smoke_test.sh` runs compile + focused test suite in one command.
+- `/Volumes/SBS1/hello_world/projects/rag_sql/ui.py` provides a minimal browser UI for manual SQL generation testing.
+
+## 10) High-Signal File Map
+
+- `/Volumes/SBS1/hello_world/projects/rag_sql/main.py` - thin CLI and dependency composition.
+- `/Volumes/SBS1/hello_world/projects/rag_sql/ui.py` - simple browser UI for manual test flow.
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/rag/engine.py` - orchestrator service (`RAGSQLEngine`).
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/retrieval/retrieval_pipeline.py` - query understanding + retrieve + rerank.
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/retrieval/hybrid_retriever.py` - fusion engine.
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/retrieval/vector_retriever.py` - FAISS adapter.
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/ingestion/bm25_index.py` - BM25 retriever.
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/retrieval/context_builder.py` - sectioned, capped context.
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/rag/sql_generator.py` - SQL generation + extraction.
+- `/Volumes/SBS1/hello_world/projects/rag_sql/src/rag/sql_validator.py` - DuckDB validation.
+- `/Volumes/SBS1/hello_world/projects/rag_sql/config.py` - runtime settings.

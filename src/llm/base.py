@@ -1,13 +1,13 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import List, Dict
 
 
 class BaseLLM(ABC):
+    @abstractmethod
+    def generate(self, messages: list[dict[str, str]]) -> str:
+        """Generate a text response from structured chat messages."""
 
     @abstractmethod
-    def generate(self, messages: List[Dict[str, str]]) -> str:
-        pass
-
-    @abstractmethod
-    def embed(self, text: str) -> List[float]:
-        pass
+    def embed(self, text: str) -> list[float]:
+        """Generate an embedding vector for retrieval."""

@@ -1,7 +1,6 @@
-#DB
+# DB
 duckdb
 
-duckdb
 pandas
 numpy
 rank-bm25
@@ -12,3 +11,4 @@ tqdm
 langchain
 langchain-openai
 langchain-community
+sentence_transformers
