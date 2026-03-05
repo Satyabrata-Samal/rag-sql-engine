@@ -17,8 +17,8 @@ env/
 .env
 
 # Data
-data/vectorstores/
-data/chunks/
+# data/vectorstores/
+# data/chunks/
 
 tests/
 notebooks/
